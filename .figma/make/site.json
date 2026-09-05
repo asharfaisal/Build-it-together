@@ -1,0 +1,10 @@
+{
+  "description": "Enables users to collaborate seamlessly by tracking tasks and progress, ensuring accountability and efficient teamwork for project success.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
