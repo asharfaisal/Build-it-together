@@ -12,7 +12,13 @@ const navItems: { id: Page; label: string; icon: string }[] = [
 ]
 
 export default function Sidebar() {
-  const { page, setPage, isDark, toggleTheme, userProfile } = useApp()
+  const { page, setPage, isDark, toggleTheme, userProfile, focusTimer } = useApp()
+
+  const fmtMinSec = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  }
 
   return (
     <aside
@@ -91,10 +97,25 @@ export default function Sidebar() {
               >
                 {item.icon}
               </span>
-              <span className="flex-1">{item.label}</span>
-              {item.id === 'coach' && (
+              <span className="flex-1 truncate">{item.label}</span>
+
+              {item.id === 'study' && focusTimer.isActive && (
                 <span
-                  className="text-xs px-1.5 py-0.5 rounded-full"
+                  className="ml-auto text-xs px-1.5 py-0.5 rounded-full font-600"
+                  style={{
+                    background: focusTimer.isPaused ? 'rgba(245,158,11,0.2)' : 'rgba(25,184,143,0.2)',
+                    color: focusTimer.isPaused ? '#f59e0b' : '#19b88f',
+                    fontSize: '10px',
+                    fontFamily: 'JetBrains Mono',
+                  }}
+                >
+                  {focusTimer.isPaused ? '⏸' : '⚡'} {fmtMinSec(focusTimer.seconds)}
+                </span>
+              )}
+
+              {item.id === 'coach' && !focusTimer.isActive && (
+                <span
+                  className="ml-auto text-xs px-1.5 py-0.5 rounded-full"
                   style={{ background: 'rgba(25,184,143,0.18)', color: '#19b88f', fontSize: '10px', fontWeight: 600 }}
                 >
                   AI

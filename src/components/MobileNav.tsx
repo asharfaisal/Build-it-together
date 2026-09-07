@@ -21,7 +21,7 @@ const allNavItems: { id: Page; label: string; icon: string }[] = [
 ]
 
 export default function MobileNav() {
-  const { page, setPage } = useApp()
+  const { page, setPage, focusTimer } = useApp()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -49,7 +49,7 @@ export default function MobileNav() {
               </div>
               <button
                 onClick={() => setDrawerOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs cursor-pointer"
                 style={{ background: 'var(--muted)', color: 'var(--muted-foreground)', border: 'none' }}
               >
                 ✕
@@ -66,16 +66,18 @@ export default function MobileNav() {
                       setPage(item.id)
                       setDrawerOpen(false)
                     }}
-                    className="flex items-center gap-2.5 p-3 rounded-2xl text-left transition-all"
+                    className="flex items-center gap-2.5 p-3 rounded-2xl text-left transition-all cursor-pointer"
                     style={{
                       background: active ? 'rgba(25, 184, 143, 0.15)' : 'var(--muted)',
                       border: `1px solid ${active ? '#19b88f' : 'transparent'}`,
                       color: active ? '#19b88f' : 'var(--foreground)',
-                      cursor: 'pointer',
                     }}
                   >
                     <span style={{ fontSize: '18px' }}>{item.icon}</span>
-                    <span className="text-xs font-600 truncate">{item.label}</span>
+                    <span className="text-xs font-600 truncate flex-1">{item.label}</span>
+                    {item.id === 'study' && focusTimer.isActive && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    )}
                   </button>
                 )
               })}
@@ -99,15 +101,19 @@ export default function MobileNav() {
             <button
               key={item.id}
               onClick={() => setPage(item.id)}
-              className="flex-1 flex flex-col items-center gap-1 py-2.5 outline-none"
+              className="flex-1 flex flex-col items-center gap-1 py-2.5 outline-none relative cursor-pointer"
               style={{
                 background: 'none',
                 border: 'none',
-                cursor: 'pointer',
                 color: active ? '#19b88f' : '#6b7a8d',
               }}
             >
-              <span style={{ fontSize: '16px' }}>{item.icon}</span>
+              <div className="relative">
+                <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                {item.id === 'study' && focusTimer.isActive && (
+                  <span className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+              </div>
               <span style={{ fontSize: '10px', fontWeight: active ? 600 : 400 }}>{item.label}</span>
             </button>
           )
@@ -116,11 +122,10 @@ export default function MobileNav() {
         {/* More/Menu button */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex-1 flex flex-col items-center gap-1 py-2.5 outline-none"
+          className="flex-1 flex flex-col items-center gap-1 py-2.5 outline-none cursor-pointer"
           style={{
             background: 'none',
             border: 'none',
-            cursor: 'pointer',
             color: page === 'calendar' || page === 'analytics' || page === 'settings' ? '#19b88f' : '#6b7a8d',
           }}
         >

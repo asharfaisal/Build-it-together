@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts'
 import { useApp } from '../context/AppContext'
-import { Subject, StudySession } from '../types'
-import { getTodayDateStr } from '../services/storage'
+import { Subject } from '../types'
 import {
   formatMinutesToHours,
   computeStudyStreak,
@@ -42,21 +41,22 @@ export default function Study() {
     updateSubject,
     deleteSubject,
     studySessions,
-    addStudySession,
     deleteStudySession,
     userProfile,
+    focusTimer,
+    startFocusTimer,
+    pauseFocusTimer,
+    resumeFocusTimer,
+    resetFocusTimer,
+    finishFocusTimerSession,
+    updateFocusTimerDetails,
   } = useApp()
 
-  // Selected subject & session topic
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(() => subjects[0]?.id || '')
-  const [sessionTopic, setSessionTopic] = useState('JOIN Operations & Queries')
-  const [sessionNotes, setSessionNotes] = useState('')
-
-  // Timer State
-  const [timerActive, setTimerActive] = useState(false)
-  const [seconds, setSeconds] = useState(0)
+  // Selected subject fallback
+  const [localSelectedSubId, setLocalSelectedSubId] = useState<string>(
+    () => focusTimer.subjectId || subjects[0]?.id || ''
+  )
   const [distractionFree, setDistractionFree] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Subject Modals
   const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false)
@@ -72,24 +72,11 @@ export default function Study() {
   const [subTargetHours, setSubTargetHours] = useState(10)
   const [subTopics, setSubTopics] = useState('')
 
-  // Selected subject object
+  // Active Subject
   const activeSubject = useMemo(() => {
-    return subjects.find((s) => s.id === selectedSubjectId) || subjects[0] || null
-  }, [subjects, selectedSubjectId])
-
-  // Timer interval handling
-  useEffect(() => {
-    if (timerActive) {
-      intervalRef.current = setInterval(() => {
-        setSeconds((s) => s + 1)
-      }, 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [timerActive])
+    const subIdToFind = focusTimer.isActive ? focusTimer.subjectId : localSelectedSubId || focusTimer.subjectId
+    return subjects.find((s) => s.id === subIdToFind) || subjects[0] || null
+  }, [subjects, focusTimer.isActive, focusTimer.subjectId, localSelectedSubId])
 
   // Format seconds to HH:MM:SS
   const fmt = (s: number) => {
@@ -118,29 +105,24 @@ export default function Study() {
   }, [studySessions])
 
   // Finish current study session
-  const handleFinishSession = () => {
-    if (seconds < 10) {
-      setTimerActive(false)
-      setSeconds(0)
-      return
-    }
-
-    const durationMins = Math.max(1, Math.round(seconds / 60))
-    if (activeSubject) {
-      addStudySession({
-        subjectId: activeSubject.id,
-        subjectName: activeSubject.name,
-        topic: sessionTopic.trim() || 'General Study Session',
-        durationMinutes: durationMins,
-        date: getTodayDateStr(),
-        notes: sessionNotes.trim() || undefined,
-      })
-    }
-
-    setTimerActive(false)
-    setSeconds(0)
-    setSessionNotes('')
+  const handleFinish = () => {
+    finishFocusTimerSession()
     setDistractionFree(false)
+  }
+
+  // Handle timer button toggle
+  const handleToggleTimer = () => {
+    if (!focusTimer.isActive) {
+      if (activeSubject) {
+        startFocusTimer(activeSubject.id, activeSubject.name, focusTimer.topic)
+      } else {
+        startFocusTimer()
+      }
+    } else if (focusTimer.isPaused) {
+      resumeFocusTimer()
+    } else {
+      pauseFocusTimer()
+    }
   }
 
   // Open Subject Create Modal
@@ -193,8 +175,8 @@ export default function Study() {
   // Timer target angle for RadialBar
   const timerProgressPct = useMemo(() => {
     const targetSec = (userProfile.pomodoroMinutes || 45) * 60
-    return Math.min(100, Math.round((seconds / targetSec) * 100))
-  }, [seconds, userProfile.pomodoroMinutes])
+    return Math.min(100, Math.round((focusTimer.seconds / targetSec) * 100))
+  }, [focusTimer.seconds, userProfile.pomodoroMinutes])
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
@@ -212,29 +194,29 @@ export default function Study() {
               </span>
             </div>
             <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Topic: {sessionTopic}
+              Topic: {focusTimer.topic || 'General Focus'}
             </div>
 
             <div
               className="text-6xl sm:text-7xl font-800 tracking-wider my-4 tabular-nums"
               style={{ fontFamily: 'JetBrains Mono', color: activeSubject?.color || '#19b88f' }}
             >
-              {fmt(seconds)}
+              {fmt(focusTimer.seconds)}
             </div>
 
             <div className="flex gap-3 w-full justify-center">
               <button
-                onClick={() => setTimerActive((a) => !a)}
+                onClick={handleToggleTimer}
                 className="px-6 py-3 rounded-2xl text-sm font-700 shadow-md cursor-pointer border-none"
                 style={{
-                  background: timerActive ? 'var(--muted)' : '#19b88f',
-                  color: timerActive ? 'var(--foreground)' : '#fff',
+                  background: focusTimer.isActive && !focusTimer.isPaused ? 'var(--muted)' : '#19b88f',
+                  color: focusTimer.isActive && !focusTimer.isPaused ? 'var(--foreground)' : '#fff',
                 }}
               >
-                {timerActive ? 'Pause' : 'Resume'}
+                {focusTimer.isActive && !focusTimer.isPaused ? 'Pause' : 'Resume'}
               </button>
               <button
-                onClick={handleFinishSession}
+                onClick={handleFinish}
                 className="px-6 py-3 rounded-2xl text-sm font-700 cursor-pointer border-none"
                 style={{ background: 'rgba(228,91,91,0.15)', color: '#e45b5b' }}
               >
@@ -259,7 +241,7 @@ export default function Study() {
             Study & Mastery
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-            Track your focused learning sessions, subjects, and build long-term retention.
+            Persistent focus timer that stays running across all pages without losing time.
           </p>
         </div>
         <button
@@ -289,7 +271,7 @@ export default function Study() {
                 Tracked Subjects
               </h2>
               <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                Click a subject to set as active timer
+                Click a subject to switch focus
               </span>
             </div>
 
@@ -309,7 +291,13 @@ export default function Study() {
                   return (
                     <div
                       key={s.id}
-                      onClick={() => setSelectedSubjectId(s.id)}
+                      onClick={() => {
+                        setLocalSelectedSubId(s.id)
+                        updateFocusTimerDetails({
+                          subjectId: s.id,
+                          subjectName: s.name,
+                        })
+                      }}
                       className="p-3.5 rounded-2xl cursor-pointer transition-all flex flex-col gap-2 group"
                       style={{
                         background: isSelected ? `${s.color}10` : 'var(--muted)',
@@ -325,8 +313,13 @@ export default function Study() {
                             {s.name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-700" style={{ color: 'var(--foreground)', fontFamily: 'Plus Jakarta Sans' }}>
-                              {s.name}
+                            <div className="text-sm font-700 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'Plus Jakarta Sans' }}>
+                              <span>{s.name}</span>
+                              {focusTimer.isActive && focusTimer.subjectId === s.id && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-600 animate-pulse">
+                                  ● Active ({fmt(focusTimer.seconds)})
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                               {formatMinutesToHours(s.studiedMinutes)} studied · Target: {s.targetHours}h
@@ -377,13 +370,17 @@ export default function Study() {
                               key={idx}
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setSelectedSubjectId(s.id)
-                                setSessionTopic(top)
+                                setLocalSelectedSubId(s.id)
+                                updateFocusTimerDetails({
+                                  subjectId: s.id,
+                                  subjectName: s.name,
+                                  topic: top,
+                                })
                               }}
                               className="text-xs px-2 py-0.5 rounded-lg transition-colors"
                               style={{
-                                background: sessionTopic === top && isSelected ? `${s.color}25` : 'var(--card)',
-                                color: sessionTopic === top && isSelected ? s.color : 'var(--muted-foreground)',
+                                background: focusTimer.topic === top && isSelected ? `${s.color}25` : 'var(--card)',
+                                color: focusTimer.topic === top && isSelected ? s.color : 'var(--muted-foreground)',
                                 border: '1px solid var(--border)',
                               }}
                             >
@@ -452,7 +449,7 @@ export default function Study() {
         <div className="flex flex-col gap-4">
           <Card className="flex flex-col items-center py-4">
             <div className="text-xs font-700 uppercase tracking-wide mb-1" style={{ color: 'var(--muted-foreground)' }}>
-              FOCUS TIMER
+              FOCUS TIMER (BACKGROUND PERSISTENT)
             </div>
             <div
               className="text-base font-700 mb-1 truncate max-w-full text-center"
@@ -463,8 +460,8 @@ export default function Study() {
 
             {/* Topic input */}
             <input
-              value={sessionTopic}
-              onChange={(e) => setSessionTopic(e.target.value)}
+              value={focusTimer.topic}
+              onChange={(e) => updateFocusTimerDetails({ topic: e.target.value })}
               placeholder="Topic (e.g. Window Functions)"
               className="text-xs px-3 py-1.5 rounded-lg text-center mb-4 outline-none w-full max-w-[220px]"
               style={{
@@ -492,10 +489,14 @@ export default function Study() {
                   className="text-2xl font-800 tabular-nums"
                   style={{ fontFamily: 'JetBrains Mono', color: 'var(--foreground)' }}
                 >
-                  {fmt(seconds)}
+                  {fmt(focusTimer.seconds)}
                 </span>
                 <span className="text-xs mt-1 capitalize" style={{ color: 'var(--muted-foreground)' }}>
-                  {timerActive ? '⚡ Focused' : seconds > 0 ? '⏸ Paused' : 'Idle'}
+                  {focusTimer.isActive && !focusTimer.isPaused
+                    ? '⚡ Focused'
+                    : focusTimer.isPaused
+                    ? '⏸ Paused'
+                    : 'Ready'}
                 </span>
               </div>
             </div>
@@ -503,19 +504,27 @@ export default function Study() {
             {/* Control buttons */}
             <div className="flex gap-2 w-full">
               <button
-                onClick={() => setTimerActive((a) => !a)}
+                onClick={handleToggleTimer}
                 className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-700 transition-all cursor-pointer shadow-sm"
                 style={{
-                  background: timerActive ? 'var(--muted)' : activeSubject?.color || '#19b88f',
-                  color: timerActive ? 'var(--foreground)' : '#fff',
+                  background:
+                    focusTimer.isActive && !focusTimer.isPaused
+                      ? 'var(--muted)'
+                      : activeSubject?.color || '#19b88f',
+                  color: focusTimer.isActive && !focusTimer.isPaused ? 'var(--foreground)' : '#fff',
                   border: 'none',
                 }}
               >
-                {timerActive ? 'Pause' : seconds > 0 ? 'Resume' : 'Start Focus'}
+                {focusTimer.isActive && !focusTimer.isPaused
+                  ? 'Pause'
+                  : focusTimer.isPaused
+                  ? 'Resume'
+                  : 'Start Focus'}
               </button>
               <button
-                onClick={handleFinishSession}
-                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-700 cursor-pointer"
+                onClick={handleFinish}
+                disabled={!focusTimer.isActive && focusTimer.seconds === 0}
+                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-700 cursor-pointer disabled:opacity-40"
                 style={{ background: 'rgba(228,91,91,0.14)', color: '#e45b5b', border: 'none' }}
               >
                 Finish
@@ -535,8 +544,18 @@ export default function Study() {
                 className="flex-1 py-2 rounded-xl text-xs font-600 cursor-pointer"
                 style={{ background: 'var(--muted)', color: 'var(--muted-foreground)', border: 'none' }}
               >
-                + Note {sessionNotes ? '✓' : ''}
+                + Note {focusTimer.notes ? '✓' : ''}
               </button>
+              {focusTimer.seconds > 0 && (
+                <button
+                  onClick={resetFocusTimer}
+                  className="px-3 py-2 rounded-xl text-xs font-600 cursor-pointer text-red-400"
+                  style={{ background: 'rgba(228,91,91,0.1)', border: 'none' }}
+                  title="Reset timer without saving"
+                >
+                  ↺
+                </button>
+              )}
             </div>
           </Card>
 
@@ -555,8 +574,8 @@ export default function Study() {
               </span>
             </div>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-              Active recall and spaced repetition yield 2.5x better retention than re-reading notes. After this session,
-              test yourself on key concepts without looking at documentation!
+              Active recall and spaced repetition yield 2.5x better retention than re-reading notes. Your timer continues
+              measuring wall-clock time even when you switch tabs or sections!
             </p>
           </div>
         </div>
@@ -652,8 +671,8 @@ export default function Study() {
         <div className="flex flex-col gap-3 mt-2">
           <textarea
             rows={4}
-            value={sessionNotes}
-            onChange={(e) => setSessionNotes(e.target.value)}
+            value={focusTimer.notes}
+            onChange={(e) => updateFocusTimerDetails({ notes: e.target.value })}
             placeholder="Write key takeaways or questions..."
             className="w-full p-3 rounded-xl text-xs sm:text-sm outline-none resize-none"
             style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}

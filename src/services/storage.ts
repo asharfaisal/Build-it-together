@@ -7,6 +7,7 @@ import {
   UserProfile,
   AppSettings,
   ChatMessage,
+  FocusTimerState,
 } from '../types'
 
 const STORAGE_KEYS = {
@@ -18,6 +19,7 @@ const STORAGE_KEYS = {
   USER_PROFILE: 'lifetrack_user_profile_v1',
   SETTINGS: 'lifetrack_settings_v1',
   CHAT_MESSAGES: 'lifetrack_chat_messages_v1',
+  FOCUS_TIMER: 'lifetrack_focus_timer_v1',
 }
 
 // Utility to get today's date formatted as YYYY-MM-DD
@@ -58,6 +60,18 @@ export const initialSettings: AppSettings = {
     autoGenerateTasks: true,
     personalizedInsights: true,
   },
+}
+
+export const initialFocusTimer: FocusTimerState = {
+  isActive: false,
+  isPaused: false,
+  seconds: 0,
+  subjectId: 'sub-1',
+  subjectName: 'SQL & Databases',
+  topic: 'JOIN Operations & Indexing',
+  notes: '',
+  startTimestamp: null,
+  accumulatedSeconds: 0,
 }
 
 export const initialSubjects: Subject[] = [
@@ -628,6 +642,30 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages))
     } catch (e) {
       console.error('Failed to save chat messages', e)
+    }
+  },
+
+  loadFocusTimer(): FocusTimerState {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.FOCUS_TIMER)
+      if (!data) return initialFocusTimer
+      const parsed: FocusTimerState = JSON.parse(data)
+      // Recalculate seconds if active
+      if (parsed.isActive && !parsed.isPaused && parsed.startTimestamp) {
+        parsed.seconds = parsed.accumulatedSeconds + Math.floor((Date.now() - parsed.startTimestamp) / 1000)
+      } else {
+        parsed.seconds = parsed.accumulatedSeconds
+      }
+      return parsed
+    } catch {
+      return initialFocusTimer
+    }
+  },
+  saveFocusTimer(timer: FocusTimerState): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.FOCUS_TIMER, JSON.stringify(timer))
+    } catch (e) {
+      console.error('Failed to save focus timer', e)
     }
   },
 

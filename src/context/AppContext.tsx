@@ -12,6 +12,7 @@ import {
   Priority,
   ExerciseSet,
   Exercise,
+  FocusTimerState,
 } from '../types'
 import {
   storageService,
@@ -23,6 +24,7 @@ import {
   initialProfile,
   initialSettings,
   initialChatMessages,
+  initialFocusTimer,
   getTodayDateStr,
 } from '../services/storage'
 import { ToastItem, ToastType, ToastContainer } from '../components/ui/Toast'
@@ -62,6 +64,17 @@ interface AppContextType {
   studySessions: StudySession[]
   addStudySession: (session: Omit<StudySession, 'id' | 'timestamp'>) => void
   deleteStudySession: (id: string) => void
+
+  // Persistent Focus Timer
+  focusTimer: FocusTimerState
+  startFocusTimer: (subjectId?: string, subjectName?: string, topic?: string) => void
+  pauseFocusTimer: () => void
+  resumeFocusTimer: () => void
+  resetFocusTimer: () => void
+  finishFocusTimerSession: () => void
+  updateFocusTimerDetails: (
+    updates: Partial<Pick<FocusTimerState, 'subjectId' | 'subjectName' | 'topic' | 'notes'>>
+  ) => void
 
   // Workouts
   workouts: Workout[]
@@ -120,6 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => storageService.loadUserProfile())
   const [settings, setSettings] = useState<AppSettings>(() => storageService.loadSettings())
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => storageService.loadChatMessages())
+  const [focusTimer, setFocusTimer] = useState<FocusTimerState>(() => storageService.loadFocusTimer())
   const [isCoachTyping, setIsCoachTyping] = useState(false)
 
   // Toasts State
@@ -169,6 +183,174 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     storageService.saveChatMessages(chatMessages)
   }, [chatMessages])
+
+  useEffect(() => {
+    storageService.saveFocusTimer(focusTimer)
+  }, [focusTimer])
+
+  // Real wall-clock timer tick interval
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null
+
+    if (focusTimer.isActive && !focusTimer.isPaused && focusTimer.startTimestamp) {
+      interval = setInterval(() => {
+        const now = Date.now()
+        const currentSeconds = focusTimer.accumulatedSeconds + Math.floor((now - focusTimer.startTimestamp!) / 1000)
+        setFocusTimer((prev) => {
+          // Avoid unnecessary re-renders if second hasn't changed
+          if (prev.seconds === currentSeconds) return prev
+          return {
+            ...prev,
+            seconds: currentSeconds,
+          }
+        })
+      }, 500)
+    }
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [focusTimer.isActive, focusTimer.isPaused, focusTimer.startTimestamp, focusTimer.accumulatedSeconds])
+
+  // Focus Timer Actions
+  const startFocusTimer = useCallback(
+    (subjectId?: string, subjectName?: string, topic?: string) => {
+      const now = Date.now()
+      setFocusTimer((prev) => ({
+        ...prev,
+        isActive: true,
+        isPaused: false,
+        startTimestamp: now,
+        subjectId: subjectId || prev.subjectId || 'sub-1',
+        subjectName: subjectName || prev.subjectName || 'SQL & Databases',
+        topic: topic !== undefined ? topic : prev.topic,
+      }))
+      showToast('Focus timer started! ⚡', 'info')
+    },
+    [showToast]
+  )
+
+  const pauseFocusTimer = useCallback(() => {
+    const now = Date.now()
+    setFocusTimer((prev) => {
+      if (!prev.isActive || prev.isPaused) return prev
+      const additional = prev.startTimestamp ? Math.floor((now - prev.startTimestamp) / 1000) : 0
+      const totalAccumulated = prev.accumulatedSeconds + additional
+      return {
+        ...prev,
+        isPaused: true,
+        accumulatedSeconds: totalAccumulated,
+        seconds: totalAccumulated,
+        startTimestamp: null,
+      }
+    })
+    showToast('Focus timer paused', 'info')
+  }, [showToast])
+
+  const resumeFocusTimer = useCallback(() => {
+    const now = Date.now()
+    setFocusTimer((prev) => ({
+      ...prev,
+      isActive: true,
+      isPaused: false,
+      startTimestamp: now,
+    }))
+    showToast('Focus timer resumed', 'info')
+  }, [showToast])
+
+  const resetFocusTimer = useCallback(() => {
+    setFocusTimer((prev) => ({
+      ...prev,
+      isActive: false,
+      isPaused: false,
+      seconds: 0,
+      accumulatedSeconds: 0,
+      startTimestamp: null,
+      notes: '',
+    }))
+    showToast('Timer reset', 'info')
+  }, [showToast])
+
+  const updateFocusTimerDetails = useCallback(
+    (updates: Partial<Pick<FocusTimerState, 'subjectId' | 'subjectName' | 'topic' | 'notes'>>) => {
+      setFocusTimer((prev) => ({
+        ...prev,
+        ...updates,
+      }))
+    },
+    []
+  )
+
+  const finishFocusTimerSession = useCallback(() => {
+    const now = Date.now()
+    const currentElapsed =
+      focusTimer.accumulatedSeconds +
+      (focusTimer.isActive && !focusTimer.isPaused && focusTimer.startTimestamp
+        ? Math.floor((now - focusTimer.startTimestamp) / 1000)
+        : 0)
+
+    if (currentElapsed < 1) {
+      showToast('Timer stopped (no time recorded)', 'info')
+      setFocusTimer({
+        ...initialFocusTimer,
+        subjectId: focusTimer.subjectId || 'sub-1',
+        subjectName: focusTimer.subjectName || 'SQL & Databases',
+        topic: focusTimer.topic,
+      })
+      return
+    }
+
+    // Accurate duration calculation:
+    // If under 60 seconds (e.g. 15-59s), record as 1 minute so testing/quick focus is preserved
+    // If >= 60s, calculate rounded minutes
+    const durationMins = currentElapsed < 60 ? 1 : Math.max(1, Math.round(currentElapsed / 60))
+
+    const subName = focusTimer.subjectName || 'General Focus'
+    const subId = focusTimer.subjectId || 'sub-1'
+    const topic = focusTimer.topic.trim() || 'General Study Session'
+
+    const newSession: StudySession = {
+      id: `ss-${Date.now()}`,
+      subjectId: subId,
+      subjectName: subName,
+      topic: topic,
+      durationMinutes: durationMins,
+      date: getTodayDateStr(),
+      timestamp: new Date().toISOString(),
+      notes: focusTimer.notes.trim() || undefined,
+    }
+
+    setStudySessions((prev) => [newSession, ...prev])
+
+    // Update subject studied minutes and lastStudied date
+    setSubjects((prev) =>
+      prev.map((s) => {
+        if (s.id === subId || s.name.toLowerCase() === subName.toLowerCase()) {
+          return {
+            ...s,
+            studiedMinutes: s.studiedMinutes + durationMins,
+            lastStudied: getTodayDateStr(),
+          }
+        }
+        return s
+      })
+    )
+
+    // Reset timer state cleanly
+    setFocusTimer({
+      ...initialFocusTimer,
+      subjectId: subId,
+      subjectName: subName,
+      topic: topic,
+    })
+
+    const elapsedMins = Math.floor(currentElapsed / 60)
+    const elapsedSecs = currentElapsed % 60
+    showToast(
+      `Saved ${durationMins}m study session for ${subName}! (${elapsedMins}m ${elapsedSecs}s elapsed)`,
+      'success'
+    )
+  }, [focusTimer, showToast])
 
   // Theme resolution
   const [systemDark, setSystemDark] = useState(() =>
@@ -279,7 +461,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [showToast]
   )
 
-  // Study Session Actions
+  // Study Session Actions (Manual)
   const addStudySession = useCallback(
     (sessionData: Omit<StudySession, 'id' | 'timestamp'>) => {
       const newSession: StudySession = {
@@ -590,6 +772,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setWorkouts([])
     setCustomEvents([])
     setChatMessages([])
+    setFocusTimer(initialFocusTimer)
     showToast('Local application data wiped', 'warning')
   }, [showToast])
 
@@ -603,6 +786,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserProfile(initialProfile)
     setSettings(initialSettings)
     setChatMessages(initialChatMessages)
+    setFocusTimer(initialFocusTimer)
     showToast('Reset data to default demonstration dataset', 'success')
   }, [showToast])
 
@@ -625,6 +809,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         studySessions,
         addStudySession,
         deleteStudySession,
+        focusTimer,
+        startFocusTimer,
+        pauseFocusTimer,
+        resumeFocusTimer,
+        resetFocusTimer,
+        finishFocusTimerSession,
+        updateFocusTimerDetails,
         workouts,
         addWorkout,
         updateWorkout,

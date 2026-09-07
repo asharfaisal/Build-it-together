@@ -121,3 +121,15 @@ export interface WeeklyReviewReport {
   recommendation: string
   hasSufficientData: boolean
 }
+
+export interface FocusTimerState {
+  isActive: boolean
+  isPaused: boolean
+  seconds: number
+  subjectId: string
+  subjectName: string
+  topic: string
+  notes: string
+  startTimestamp: number | null
+  accumulatedSeconds: number
+}
