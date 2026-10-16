@@ -1,11 +1,17 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co"
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY || "placeholder-anon-key"
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase environment variables. Please check .env file.",
+export const isSupabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
+)
+
+if (!isSupabaseConfigured) {
+  console.warn(
+    "Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are not set in your Vercel deployment. Running with local offline storage fallback.",
   )
 }
 

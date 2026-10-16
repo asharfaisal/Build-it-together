@@ -40,13 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true
 
     const initAuth = async () => {
-      const {
-        data: { session: initialSession },
-      } = await supabase.auth.getSession()
-      if (mounted) {
-        setSession(initialSession)
-        setUser(initialSession?.user ?? null)
-        setLoading(false)
+      try {
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession()
+        if (mounted) {
+          setSession(initialSession)
+          setUser(initialSession?.user ?? null)
+          setLoading(false)
+        }
+      } catch (err) {
+        console.warn("Could not retrieve Supabase session:", err)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 

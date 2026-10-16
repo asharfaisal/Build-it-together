@@ -55,7 +55,7 @@ export default async function handler(req: any, res: any) {
     tasks = [],
     studySessions = [],
     workouts = [],
-    userProfile = {},
+    userProfile = { name: "Student/Athlete", dailyStudyGoalHours: 4, workoutGoalPerWeek: 4 },
   } = (req.body || {}) as RequestDataPayload
 
   if (!message || typeof message !== "string") {
