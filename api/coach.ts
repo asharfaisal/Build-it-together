@@ -30,7 +30,7 @@ export interface RequestDataPayload {
 }
 
 export const config = {
-  runtime: "nodejs20.x",
+  runtime: "nodejs",
   maxDuration: 30,
 }
 
