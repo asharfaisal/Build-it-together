@@ -1,33 +1,73 @@
-import React, { useState, useMemo } from 'react'
-import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts'
-import { useApp } from '../context/AppContext'
-import { Subject } from '../types'
+import React, { useState, useMemo } from "react"
+
+import { RadialBarChart, RadialBar, ResponsiveContainer } from "recharts"
+
+import {
+  BookOpen,
+  Play,
+  Pause,
+  RotateCcw,
+  Sparkles,
+  Pencil,
+  Trash2,
+  Maximize2,
+  FileText,
+  Plus,
+} from "lucide-react"
+
+import { useApp } from "../context/AppContext"
+
+import { Subject } from "../types"
+
 import {
   formatMinutesToHours,
   computeStudyStreak,
-} from '../services/analyticsService'
-import Modal from '../components/ui/Modal'
-import ConfirmDialog from '../components/ui/ConfirmDialog'
-import EmptyState from '../components/ui/EmptyState'
+} from "../services/analyticsService"
 
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+import Modal from "../components/ui/Modal"
+
+import ConfirmDialog from "../components/ui/ConfirmDialog"
+
+import EmptyState from "../components/ui/EmptyState"
+
+function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return (
     <div
       className={`rounded-2xl p-5 ${className}`}
-      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      style={{ background: "var(--card)", border: "1px solid var(--border)" }}
     >
       {children}
     </div>
   )
 }
 
-function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string
+  value: string
+  color: string
+}) {
   return (
     <Card className="flex flex-col gap-1">
-      <div className="text-xl sm:text-2xl font-800 truncate" style={{ fontFamily: 'Plus Jakarta Sans', color }}>
+      <div
+        className="text-xl sm:text-2xl font-extrabold truncate"
+        style={{ fontFamily: "Plus Jakarta Sans", color }}
+      >
         {value}
       </div>
-      <div className="text-xs font-500" style={{ color: 'var(--muted-foreground)' }}>
+      <div
+        className="text-xs font-medium"
+        style={{ color: "var(--muted-foreground)" }}
+      >
         {label}
       </div>
     </Card>
@@ -37,80 +77,127 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 export default function Study() {
   const {
     subjects,
+
     addSubject,
+
     updateSubject,
+
     deleteSubject,
+
     studySessions,
+
     deleteStudySession,
+
     userProfile,
+
     focusTimer,
+
     startFocusTimer,
+
     pauseFocusTimer,
+
     resumeFocusTimer,
+
     resetFocusTimer,
+
     finishFocusTimerSession,
+
     updateFocusTimerDetails,
   } = useApp()
 
   // Selected subject fallback
+
   const [localSelectedSubId, setLocalSelectedSubId] = useState<string>(
-    () => focusTimer.subjectId || subjects[0]?.id || ''
+    () => focusTimer.subjectId || subjects[0]?.id || "",
   )
+
   const [distractionFree, setDistractionFree] = useState(false)
 
   // Subject Modals
+
   const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false)
+
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
-  const [deletingSubjectId, setDeletingSubjectId] = useState<string | null>(null)
+
+  const [deletingSubjectId, setDeletingSubjectId] = useState<string | null>(
+    null,
+  )
 
   // Note Modal during session
+
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
 
   // Subject Form State
-  const [subName, setSubName] = useState('')
-  const [subColor, setSubColor] = useState('#19b88f')
+
+  const [subName, setSubName] = useState("")
+
+  const [subColor, setSubColor] = useState("#19b88f")
+
   const [subTargetHours, setSubTargetHours] = useState(10)
-  const [subTopics, setSubTopics] = useState('')
+
+  const [subTopics, setSubTopics] = useState("")
 
   // Active Subject
+
   const activeSubject = useMemo(() => {
-    const subIdToFind = focusTimer.isActive ? focusTimer.subjectId : localSelectedSubId || focusTimer.subjectId
+    const subIdToFind = focusTimer.isActive
+      ? focusTimer.subjectId
+      : localSelectedSubId || focusTimer.subjectId
+
     return subjects.find((s) => s.id === subIdToFind) || subjects[0] || null
   }, [subjects, focusTimer.isActive, focusTimer.subjectId, localSelectedSubId])
 
   // Format seconds to HH:MM:SS
+
   const fmt = (s: number) => {
     const h = Math.floor(s / 3600)
+
     const m = Math.floor((s % 3600) / 60)
+
     const sec = s % 60
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
   }
 
   // Live Calculations
-  const studyStreak = useMemo(() => computeStudyStreak(studySessions), [studySessions])
+
+  const studyStreak = useMemo(
+    () => computeStudyStreak(studySessions),
+    [studySessions],
+  )
 
   const weeklyStudyMinutes = useMemo(() => {
     const sevenDaysAgo = new Date()
+
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
+
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0]
+
     return studySessions
+
       .filter((s) => s.date >= sevenDaysAgoStr)
+
       .reduce((acc, s) => acc + s.durationMinutes, 0)
   }, [studySessions])
 
   const averageSessionMinutes = useMemo(() => {
     if (studySessions.length === 0) return 0
+
     const total = studySessions.reduce((acc, s) => acc + s.durationMinutes, 0)
+
     return Math.round(total / studySessions.length)
   }, [studySessions])
 
   // Finish current study session
+
   const handleFinish = () => {
     finishFocusTimerSession()
+
     setDistractionFree(false)
   }
 
   // Handle timer button toggle
+
   const handleToggleTimer = () => {
     if (!focusTimer.isActive) {
       if (activeSubject) {
@@ -126,55 +213,80 @@ export default function Study() {
   }
 
   // Open Subject Create Modal
+
   const openSubjectCreate = () => {
-    setSubName('')
-    setSubColor('#19b88f')
+    setSubName("")
+
+    setSubColor("#19b88f")
+
     setSubTargetHours(10)
-    setSubTopics('')
+
+    setSubTopics("")
+
     setIsCreateSubjectOpen(true)
   }
 
   // Open Subject Edit Modal
+
   const openSubjectEdit = (s: Subject) => {
     setEditingSubject(s)
+
     setSubName(s.name)
+
     setSubColor(s.color)
+
     setSubTargetHours(s.targetHours)
-    setSubTopics(s.topics.join(', '))
+
+    setSubTopics(s.topics.join(", "))
   }
 
   // Save Subject
+
   const handleSaveSubject = (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!subName.trim()) return
 
     const topicList = subTopics
-      .split(',')
+
+      .split(",")
+
       .map((t) => t.trim())
+
       .filter((t) => t.length > 0)
 
     if (editingSubject) {
       updateSubject(editingSubject.id, {
         name: subName.trim(),
+
         color: subColor,
+
         targetHours: Number(subTargetHours) || 10,
+
         topics: topicList.length > 0 ? topicList : editingSubject.topics,
       })
+
       setEditingSubject(null)
     } else {
       addSubject({
         name: subName.trim(),
+
         color: subColor,
+
         targetHours: Number(subTargetHours) || 10,
-        topics: topicList.length > 0 ? topicList : ['Core Concepts'],
+
+        topics: topicList.length > 0 ? topicList : ["Core Concepts"],
       })
+
       setIsCreateSubjectOpen(false)
     }
   }
 
   // Timer target angle for RadialBar
+
   const timerProgressPct = useMemo(() => {
     const targetSec = (userProfile.pomodoroMinutes || 45) * 60
+
     return Math.min(100, Math.round((focusTimer.seconds / targetSec) * 100))
   }, [focusTimer.seconds, userProfile.pomodoroMinutes])
 
@@ -184,22 +296,41 @@ export default function Study() {
       {distractionFree && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6"
-          style={{ background: 'var(--background)', color: 'var(--foreground)' }}
+          style={{
+            background: "var(--background)",
+            color: "var(--foreground)",
+          }}
         >
           <div className="text-center max-w-md w-full flex flex-col items-center gap-6">
             <div className="flex items-center gap-2">
-              <span style={{ color: activeSubject?.color || '#19b88f', fontSize: '20px' }}>●</span>
-              <span className="text-lg font-700" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-                {activeSubject?.name || 'Focused Study'}
+              <span
+                style={{
+                  color: activeSubject?.color || "#19b88f",
+                  fontSize: "20px",
+                }}
+              >
+                ●
+              </span>
+              <span
+                className="text-lg font-bold"
+                style={{ fontFamily: "Plus Jakarta Sans" }}
+              >
+                {activeSubject?.name || "Focused Study"}
               </span>
             </div>
-            <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Topic: {focusTimer.topic || 'General Focus'}
+            <div
+              className="text-sm"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              Topic: {focusTimer.topic || "General Focus"}
             </div>
 
             <div
-              className="text-6xl sm:text-7xl font-800 tracking-wider my-4 tabular-nums"
-              style={{ fontFamily: 'JetBrains Mono', color: activeSubject?.color || '#19b88f' }}
+              className="text-6xl sm:text-7xl font-extrabold tracking-wider my-4 tabular-nums"
+              style={{
+                fontFamily: "JetBrains Mono",
+                color: activeSubject?.color || "#19b88f",
+              }}
             >
               {fmt(focusTimer.seconds)}
             </div>
@@ -207,25 +338,37 @@ export default function Study() {
             <div className="flex gap-3 w-full justify-center">
               <button
                 onClick={handleToggleTimer}
-                className="px-6 py-3 rounded-2xl text-sm font-700 shadow-md cursor-pointer border-none"
+                className="px-6 py-3 rounded-2xl text-sm font-bold shadow-md cursor-pointer border-none"
                 style={{
-                  background: focusTimer.isActive && !focusTimer.isPaused ? 'var(--muted)' : '#19b88f',
-                  color: focusTimer.isActive && !focusTimer.isPaused ? 'var(--foreground)' : '#fff',
+                  background:
+                    focusTimer.isActive && !focusTimer.isPaused
+                      ? "var(--muted)"
+                      : "#19b88f",
+
+                  color:
+                    focusTimer.isActive && !focusTimer.isPaused
+                      ? "var(--foreground)"
+                      : "#fff",
                 }}
               >
-                {focusTimer.isActive && !focusTimer.isPaused ? 'Pause' : 'Resume'}
+                {focusTimer.isActive && !focusTimer.isPaused
+                  ? "Pause"
+                  : "Resume"}
               </button>
               <button
                 onClick={handleFinish}
-                className="px-6 py-3 rounded-2xl text-sm font-700 cursor-pointer border-none"
-                style={{ background: 'rgba(228,91,91,0.15)', color: '#e45b5b' }}
+                className="px-6 py-3 rounded-2xl text-sm font-bold cursor-pointer border-none"
+                style={{ background: "rgba(228,91,91,0.15)", color: "#e45b5b" }}
               >
                 Finish & Save
               </button>
               <button
                 onClick={() => setDistractionFree(false)}
-                className="px-4 py-3 rounded-2xl text-xs font-600 cursor-pointer border-none"
-                style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}
+                className="px-4 py-3 rounded-2xl text-xs font-semibold cursor-pointer border-none"
+                style={{
+                  background: "var(--muted)",
+                  color: "var(--muted-foreground)",
+                }}
               >
                 Exit Focus
               </button>
@@ -237,17 +380,27 @@ export default function Study() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-800" style={{ fontFamily: 'Plus Jakarta Sans', color: 'var(--foreground)' }}>
+          <h1
+            className="text-2xl font-extrabold"
+            style={{
+              fontFamily: "Plus Jakarta Sans",
+              color: "var(--foreground)",
+            }}
+          >
             Study & Mastery
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-            Persistent focus timer that stays running across all pages without losing time.
+          <p
+            className="text-sm mt-1"
+            style={{ color: "var(--muted-foreground)" }}
+          >
+            Persistent focus timer that stays running across all pages without
+            losing time.
           </p>
         </div>
         <button
           onClick={openSubjectCreate}
-          className="px-4 py-2.5 rounded-xl text-sm font-600 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
-          style={{ background: '#19b88f', color: '#fff', border: 'none' }}
+          className="px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+          style={{ background: "#19b88f", color: "#fff", border: "none" }}
         >
           + Add Subject
         </button>
@@ -255,10 +408,26 @@ export default function Study() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Study Streak" value={`${studyStreak} days 🔥`} color="#f59e0b" />
-        <StatCard label="Weekly Study Time" value={formatMinutesToHours(weeklyStudyMinutes)} color="#19b88f" />
-        <StatCard label="Active Subjects" value={String(subjects.length)} color="#5b8def" />
-        <StatCard label="Average Session" value={formatMinutesToHours(averageSessionMinutes)} color="#a78bfa" />
+        <StatCard
+          label="Study Streak"
+          value={`${studyStreak} days 🔥`}
+          color="#f59e0b"
+        />
+        <StatCard
+          label="Weekly Study Time"
+          value={formatMinutesToHours(weeklyStudyMinutes)}
+          color="#19b88f"
+        />
+        <StatCard
+          label="Active Subjects"
+          value={String(subjects.length)}
+          color="#5b8def"
+        />
+        <StatCard
+          label="Average Session"
+          value={formatMinutesToHours(averageSessionMinutes)}
+          color="#a78bfa"
+        />
       </div>
 
       {/* Main Grid: Subjects & Timer */}
@@ -267,10 +436,19 @@ export default function Study() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-700" style={{ fontFamily: 'Plus Jakarta Sans', color: 'var(--foreground)' }}>
+              <h2
+                className="text-base font-bold"
+                style={{
+                  fontFamily: "Plus Jakarta Sans",
+                  color: "var(--foreground)",
+                }}
+              >
                 Tracked Subjects
               </h2>
-              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              <span
+                className="text-xs"
+                style={{ color: "var(--muted-foreground)" }}
+              >
                 Click a subject to switch focus
               </span>
             </div>
@@ -287,78 +465,121 @@ export default function Study() {
               <div className="flex flex-col gap-3">
                 {subjects.map((s) => {
                   const isSelected = activeSubject?.id === s.id
-                  const progressPct = Math.min(100, Math.round((s.studiedMinutes / (s.targetHours * 60)) * 100))
+
+                  const progressPct = Math.min(
+                    100,
+                    Math.round((s.studiedMinutes / (s.targetHours * 60)) * 100),
+                  )
+
                   return (
                     <div
                       key={s.id}
                       onClick={() => {
                         setLocalSelectedSubId(s.id)
+
                         updateFocusTimerDetails({
                           subjectId: s.id,
+
                           subjectName: s.name,
                         })
                       }}
                       className="p-3.5 rounded-2xl cursor-pointer transition-all flex flex-col gap-2 group"
                       style={{
-                        background: isSelected ? `${s.color}10` : 'var(--muted)',
-                        border: `1px solid ${isSelected ? `${s.color}40` : 'var(--border)'}`,
+                        background: isSelected
+                          ? `${s.color}10`
+                          : "var(--muted)",
+
+                        border: `1px solid ${
+                          isSelected ? `${s.color}40` : "var(--border)"
+                        }`,
                       }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-700 shrink-0"
-                            style={{ background: `${s.color}20`, color: s.color, fontFamily: 'Plus Jakarta Sans' }}
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
+                            style={{
+                              background: `${s.color}20`,
+                              color: s.color,
+                              fontFamily: "Plus Jakarta Sans",
+                            }}
                           >
                             {s.name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-700 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'Plus Jakarta Sans' }}>
+                            <div
+                              className="text-sm font-bold flex items-center gap-2"
+                              style={{
+                                color: "var(--foreground)",
+                                fontFamily: "Plus Jakarta Sans",
+                              }}
+                            >
                               <span>{s.name}</span>
-                              {focusTimer.isActive && focusTimer.subjectId === s.id && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-600 animate-pulse">
-                                  ● Active ({fmt(focusTimer.seconds)})
-                                </span>
-                              )}
+                              {focusTimer.isActive &&
+                                focusTimer.subjectId === s.id && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold animate-pulse">
+                                    ● Active ({fmt(focusTimer.seconds)})
+                                  </span>
+                                )}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                              {formatMinutesToHours(s.studiedMinutes)} studied · Target: {s.targetHours}h
+                            <div
+                              className="text-xs"
+                              style={{ color: "var(--muted-foreground)" }}
+                            >
+                              {formatMinutesToHours(s.studiedMinutes)} studied ·
+                              Target: {s.targetHours}h
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-700" style={{ color: s.color }}>
+                          <span
+                            className="text-xs font-bold"
+                            style={{ color: s.color }}
+                          >
                             {progressPct}%
                           </span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
+
                               openSubjectEdit(s)
                             }}
-                            className="p-1 rounded-md text-xs hover:bg-white/10 bg-transparent border-none cursor-pointer"
+                            className="p-1.5 rounded-lg text-xs hover:bg-white/10 bg-transparent border-none cursor-pointer flex items-center justify-center min-h-[36px] min-w-[36px] focus-visible:ring-2 focus-visible:ring-emerald-400"
                             title="Edit subject"
+                            aria-label={`Edit subject ${s.name}`}
                           >
-                            ✏️
+                            <Pencil
+                              size={15}
+                              style={{ color: "var(--muted-foreground)" }}
+                            />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
+
                               setDeletingSubjectId(s.id)
                             }}
-                            className="p-1 rounded-md text-xs text-red-400 hover:bg-red-500/10 bg-transparent border-none cursor-pointer"
+                            className="p-1.5 rounded-lg text-xs text-red-400 hover:bg-red-500/10 bg-transparent border-none cursor-pointer flex items-center justify-center min-h-[36px] min-w-[36px] focus-visible:ring-2 focus-visible:ring-red-400"
                             title="Delete subject"
+                            aria-label={`Delete subject ${s.name}`}
                           >
-                            🗑
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </div>
 
                       {/* Progress bar */}
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
+                      <div
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "var(--border)" }}
+                      >
                         <div
                           className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${progressPct}%`, background: s.color }}
+                          style={{
+                            width: `${progressPct}%`,
+                            background: s.color,
+                          }}
                         />
                       </div>
 
@@ -370,18 +591,30 @@ export default function Study() {
                               key={idx}
                               onClick={(e) => {
                                 e.stopPropagation()
+
                                 setLocalSelectedSubId(s.id)
+
                                 updateFocusTimerDetails({
                                   subjectId: s.id,
+
                                   subjectName: s.name,
+
                                   topic: top,
                                 })
                               }}
                               className="text-xs px-2 py-0.5 rounded-lg transition-colors"
                               style={{
-                                background: focusTimer.topic === top && isSelected ? `${s.color}25` : 'var(--card)',
-                                color: focusTimer.topic === top && isSelected ? s.color : 'var(--muted-foreground)',
-                                border: '1px solid var(--border)',
+                                background:
+                                  focusTimer.topic === top && isSelected
+                                    ? `${s.color}25`
+                                    : "var(--card)",
+
+                                color:
+                                  focusTimer.topic === top && isSelected
+                                    ? s.color
+                                    : "var(--muted-foreground)",
+
+                                border: "1px solid var(--border)",
                               }}
                             >
                               {top}
@@ -398,12 +631,22 @@ export default function Study() {
 
           {/* Study History */}
           <Card>
-            <h2 className="text-base font-700 mb-3" style={{ fontFamily: 'Plus Jakarta Sans', color: 'var(--foreground)' }}>
+            <h2
+              className="text-base font-bold mb-3"
+              style={{
+                fontFamily: "Plus Jakarta Sans",
+                color: "var(--foreground)",
+              }}
+            >
               Recent Study Sessions Log
             </h2>
             {studySessions.length === 0 ? (
-              <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                No recorded sessions yet. Use the timer on the right to log your first session.
+              <p
+                className="text-xs"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                No recorded sessions yet. Use the timer on the right to log your
+                first session.
               </p>
             ) : (
               <div className="flex flex-col gap-2 max-h-56 overflow-y-auto scroll-thin pr-1">
@@ -411,31 +654,45 @@ export default function Study() {
                   <div
                     key={ss.id}
                     className="flex items-center justify-between p-3 rounded-xl text-xs"
-                    style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
+                    style={{
+                      background: "var(--muted)",
+                      border: "1px solid var(--border)",
+                    }}
                   >
                     <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-                      <span style={{ color: '#19b88f' }}>📖</span>
-                      <span className="font-600 truncate" style={{ color: 'var(--foreground)' }}>
+                      <BookOpen size={14} style={{ color: "var(--primary)" }} />
+                      <span
+                        className="font-semibold truncate"
+                        style={{ color: "var(--foreground)" }}
+                      >
                         {ss.subjectName}
                       </span>
-                      <span style={{ color: 'var(--muted-foreground)' }}>— {ss.topic}</span>
+                      <span style={{ color: "var(--muted-foreground)" }}>
+                        — {ss.topic}
+                      </span>
                       {ss.notes && (
-                        <span className="truncate max-w-[140px] italic" style={{ color: 'var(--muted-foreground)' }}>
+                        <span
+                          className="truncate max-w-[140px] italic"
+                          style={{ color: "var(--muted-foreground)" }}
+                        >
                           ("{ss.notes}")
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-700 text-emerald-500">
+                      <span className="font-bold text-emerald-500">
                         {formatMinutesToHours(ss.durationMinutes)}
                       </span>
-                      <span style={{ color: 'var(--muted-foreground)' }}>{ss.date}</span>
+                      <span style={{ color: "var(--muted-foreground)" }}>
+                        {ss.date}
+                      </span>
                       <button
                         onClick={() => deleteStudySession(ss.id)}
-                        className="text-red-400 hover:text-red-500 bg-transparent border-none cursor-pointer p-0.5"
+                        className="text-red-400 hover:text-red-500 bg-transparent border-none cursor-pointer p-1 min-h-[36px] min-w-[36px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-red-400"
                         title="Delete log"
+                        aria-label="Delete session log"
                       >
-                        ✕
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -448,26 +705,36 @@ export default function Study() {
         {/* Study Timer Card */}
         <div className="flex flex-col gap-4">
           <Card className="flex flex-col items-center py-4">
-            <div className="text-xs font-700 uppercase tracking-wide mb-1" style={{ color: 'var(--muted-foreground)' }}>
+            <div
+              className="text-xs font-bold uppercase tracking-wide mb-1"
+              style={{ color: "var(--muted-foreground)" }}
+            >
               FOCUS TIMER (BACKGROUND PERSISTENT)
             </div>
             <div
-              className="text-base font-700 mb-1 truncate max-w-full text-center"
-              style={{ color: activeSubject?.color || '#19b88f', fontFamily: 'Plus Jakarta Sans' }}
+              className="text-base font-bold mb-1 truncate max-w-full text-center"
+              style={{
+                color: activeSubject?.color || "#19b88f",
+                fontFamily: "Plus Jakarta Sans",
+              }}
             >
-              {activeSubject?.name || 'Select a subject'}
+              {activeSubject?.name || "Select a subject"}
             </div>
 
             {/* Topic input */}
             <input
               value={focusTimer.topic}
-              onChange={(e) => updateFocusTimerDetails({ topic: e.target.value })}
+              onChange={(e) =>
+                updateFocusTimerDetails({ topic: e.target.value })
+              }
               placeholder="Topic (e.g. Window Functions)"
               className="text-xs px-3 py-1.5 rounded-lg text-center mb-4 outline-none w-full max-w-[220px]"
               style={{
-                background: 'var(--muted)',
-                border: '1px solid var(--border)',
-                color: 'var(--foreground)',
+                background: "var(--muted)",
+
+                border: "1px solid var(--border)",
+
+                color: "var(--foreground)",
               }}
             />
 
@@ -477,26 +744,41 @@ export default function Study() {
                 <RadialBarChart
                   innerRadius="72%"
                   outerRadius="100%"
-                  data={[{ value: timerProgressPct || 1, fill: activeSubject?.color || '#19b88f' }]}
+                  data={[
+                    {
+                      value: timerProgressPct || 1,
+                      fill: activeSubject?.color || "#19b88f",
+                    },
+                  ]}
                   startAngle={90}
                   endAngle={-270}
                 >
-                  <RadialBar dataKey="value" cornerRadius={10} background={{ fill: 'var(--muted)' }} />
+                  <RadialBar
+                    dataKey="value"
+                    cornerRadius={10}
+                    background={{ fill: "var(--muted)" }}
+                  />
                 </RadialBarChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span
-                  className="text-2xl font-800 tabular-nums"
-                  style={{ fontFamily: 'JetBrains Mono', color: 'var(--foreground)' }}
+                  className="text-2xl font-extrabold tabular-nums"
+                  style={{
+                    fontFamily: "JetBrains Mono",
+                    color: "var(--foreground)",
+                  }}
                 >
                   {fmt(focusTimer.seconds)}
                 </span>
-                <span className="text-xs mt-1 capitalize" style={{ color: 'var(--muted-foreground)' }}>
+                <span
+                  className="text-xs mt-1 capitalize"
+                  style={{ color: "var(--muted-foreground)" }}
+                >
                   {focusTimer.isActive && !focusTimer.isPaused
-                    ? '⚡ Focused'
+                    ? "⚡ Focused"
                     : focusTimer.isPaused
-                    ? '⏸ Paused'
-                    : 'Ready'}
+                      ? "⏸ Paused"
+                      : "Ready"}
                 </span>
               </div>
             </div>
@@ -505,27 +787,36 @@ export default function Study() {
             <div className="flex gap-2 w-full">
               <button
                 onClick={handleToggleTimer}
-                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-700 transition-all cursor-pointer shadow-sm"
+                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-sm"
                 style={{
                   background:
                     focusTimer.isActive && !focusTimer.isPaused
-                      ? 'var(--muted)'
-                      : activeSubject?.color || '#19b88f',
-                  color: focusTimer.isActive && !focusTimer.isPaused ? 'var(--foreground)' : '#fff',
-                  border: 'none',
+                      ? "var(--muted)"
+                      : activeSubject?.color || "#19b88f",
+
+                  color:
+                    focusTimer.isActive && !focusTimer.isPaused
+                      ? "var(--foreground)"
+                      : "#fff",
+
+                  border: "none",
                 }}
               >
                 {focusTimer.isActive && !focusTimer.isPaused
-                  ? 'Pause'
+                  ? "Pause"
                   : focusTimer.isPaused
-                  ? 'Resume'
-                  : 'Start Focus'}
+                    ? "Resume"
+                    : "Start Focus"}
               </button>
               <button
                 onClick={handleFinish}
                 disabled={!focusTimer.isActive && focusTimer.seconds === 0}
-                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-700 cursor-pointer disabled:opacity-40"
-                style={{ background: 'rgba(228,91,91,0.14)', color: '#e45b5b', border: 'none' }}
+                className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer disabled:opacity-40"
+                style={{
+                  background: "rgba(228,91,91,0.14)",
+                  color: "#e45b5b",
+                  border: "none",
+                }}
               >
                 Finish
               </button>
@@ -534,23 +825,31 @@ export default function Study() {
             <div className="flex gap-2 w-full mt-2">
               <button
                 onClick={() => setDistractionFree(true)}
-                className="flex-1 py-2 rounded-xl text-xs font-600 cursor-pointer"
-                style={{ background: 'var(--muted)', color: 'var(--muted-foreground)', border: 'none' }}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+                style={{
+                  background: "var(--muted)",
+                  color: "var(--muted-foreground)",
+                  border: "none",
+                }}
               >
                 Distraction-Free
               </button>
               <button
                 onClick={() => setIsNoteModalOpen(true)}
-                className="flex-1 py-2 rounded-xl text-xs font-600 cursor-pointer"
-                style={{ background: 'var(--muted)', color: 'var(--muted-foreground)', border: 'none' }}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+                style={{
+                  background: "var(--muted)",
+                  color: "var(--muted-foreground)",
+                  border: "none",
+                }}
               >
-                + Note {focusTimer.notes ? '✓' : ''}
+                + Note {focusTimer.notes ? "✓" : ""}
               </button>
               {focusTimer.seconds > 0 && (
                 <button
                   onClick={resetFocusTimer}
-                  className="px-3 py-2 rounded-xl text-xs font-600 cursor-pointer text-red-400"
-                  style={{ background: 'rgba(228,91,91,0.1)', border: 'none' }}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-red-400"
+                  style={{ background: "rgba(228,91,91,0.1)", border: "none" }}
                   title="Reset timer without saving"
                 >
                   ↺
@@ -563,19 +862,25 @@ export default function Study() {
           <div
             className="rounded-2xl p-4"
             style={{
-              background: 'linear-gradient(135deg, rgba(25,184,143,0.08), rgba(91,141,239,0.06))',
-              border: '1px solid rgba(25,184,143,0.2)',
+              background:
+                "linear-gradient(135deg, rgba(25,184,143,0.08), rgba(91,141,239,0.06))",
+
+              border: "1px solid rgba(25,184,143,0.2)",
             }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <span style={{ color: '#19b88f' }}>✦</span>
-              <span className="text-xs font-700" style={{ color: '#19b88f' }}>
+              <span style={{ color: "#19b88f" }}>✦</span>
+              <span className="text-xs font-bold" style={{ color: "#19b88f" }}>
                 AI Learning Strategy
               </span>
             </div>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-              Active recall and spaced repetition yield 2.5x better retention than re-reading notes. Your timer continues
-              measuring wall-clock time even when you switch tabs or sections!
+            <p
+              className="text-xs leading-relaxed"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              Active recall and spaced repetition yield 2.5x better retention
+              than re-reading notes. Your timer continues measuring wall-clock
+              time even when you switch tabs or sections!
             </p>
           </div>
         </div>
@@ -586,38 +891,55 @@ export default function Study() {
         isOpen={isCreateSubjectOpen || editingSubject !== null}
         onClose={() => {
           setIsCreateSubjectOpen(false)
+
           setEditingSubject(null)
         }}
-        title={editingSubject ? 'Edit Subject' : 'Add New Subject'}
+        title={editingSubject ? "Edit Subject" : "Add New Subject"}
       >
         <form onSubmit={handleSaveSubject} className="flex flex-col gap-4 mt-2">
           <div>
-            <label className="text-xs font-600 block mb-1">Subject Name *</label>
+            <label className="text-xs font-semibold block mb-1">
+              Subject Name *
+            </label>
             <input
               required
               value={subName}
               onChange={(e) => setSubName(e.target.value)}
               placeholder="e.g. Distributed Systems"
               className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+              }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-600 block mb-1">Target Hours</label>
+              <label className="text-xs font-semibold block mb-1">
+                Target Hours
+              </label>
               <input
                 type="number"
                 min="1"
                 max="500"
                 value={subTargetHours}
-                onChange={(e) => setSubTargetHours(parseInt(e.target.value, 10) || 10)}
+                onChange={(e) =>
+                  setSubTargetHours(parseInt(e.target.value, 10) || 10)
+                }
                 className="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                style={{
+                  background: "var(--muted)",
+                  border: "1px solid var(--border)",
+                  color: "var(--foreground)",
+                }}
               />
             </div>
             <div>
-              <label className="text-xs font-600 block mb-1">Color Theme</label>
+              <label className="text-xs font-semibold block mb-1">
+                Color Theme
+              </label>
               <input
                 type="color"
                 value={subColor}
@@ -628,34 +950,48 @@ export default function Study() {
           </div>
 
           <div>
-            <label className="text-xs font-600 block mb-1">Topics (comma separated)</label>
+            <label className="text-xs font-semibold block mb-1">
+              Topics (comma separated)
+            </label>
             <input
               value={subTopics}
               onChange={(e) => setSubTopics(e.target.value)}
               placeholder="e.g. Consensus, Raft, Paxos, Replication"
               className="w-full px-3.5 py-2 rounded-xl text-xs outline-none"
-              style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+              }}
             />
           </div>
 
-          <div className="flex justify-end gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div
+            className="flex justify-end gap-2 mt-4 pt-3 border-t"
+            style={{ borderColor: "var(--border)" }}
+          >
             <button
               type="button"
               onClick={() => {
                 setIsCreateSubjectOpen(false)
+
                 setEditingSubject(null)
               }}
-              className="px-4 py-2 rounded-xl text-xs font-600 cursor-pointer"
-              style={{ background: 'var(--muted)', color: 'var(--foreground)', border: 'none' }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+              style={{
+                background: "var(--muted)",
+                color: "var(--foreground)",
+                border: "none",
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-xs font-600 cursor-pointer shadow-sm"
-              style={{ background: '#19b88f', color: '#fff', border: 'none' }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
+              style={{ background: "#19b88f", color: "#fff", border: "none" }}
             >
-              {editingSubject ? 'Save Changes' : 'Create Subject'}
+              {editingSubject ? "Save Changes" : "Create Subject"}
             </button>
           </div>
         </form>
@@ -675,13 +1011,17 @@ export default function Study() {
             onChange={(e) => updateFocusTimerDetails({ notes: e.target.value })}
             placeholder="Write key takeaways or questions..."
             className="w-full p-3 rounded-xl text-xs sm:text-sm outline-none resize-none"
-            style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+            style={{
+              background: "var(--muted)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
           />
           <div className="flex justify-end">
             <button
               onClick={() => setIsNoteModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-600 cursor-pointer"
-              style={{ background: '#19b88f', color: '#fff', border: 'none' }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+              style={{ background: "#19b88f", color: "#fff", border: "none" }}
             >
               Save Note
             </button>

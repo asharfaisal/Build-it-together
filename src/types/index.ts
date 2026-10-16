@@ -1,5 +1,5 @@
-export type Priority = 'High' | 'Medium' | 'Low'
-export type TaskCategory = 'Today' | 'Upcoming' | 'Completed' | 'Overdue'
+export type Priority = "High" | "Medium" | "Low"
+export type TaskCategory = "Today" | "Upcoming" | "Completed" | "Overdue"
 
 export interface Task {
   id: string
@@ -54,9 +54,9 @@ export interface Exercise {
 export interface Workout {
   id: string
   name: string
-  category: 'Upper Body' | 'Legs' | 'Cardio' | 'Core & Abs' | 'Full Body' | 'Push' | 'Pull' | 'Other'
+  category: "Upper Body" | "Legs" | "Cardio" | "Core & Abs" | "Full Body" | "Push" | "Pull" | "Other"
   durationMinutes: number
-  status: 'Completed' | 'Planned'
+  status: "Completed" | "Planned"
   date: string // YYYY-MM-DD
   color: string
   exercises: Exercise[]
@@ -68,7 +68,7 @@ export interface CustomEvent {
   title: string
   date: string // YYYY-MM-DD
   time?: string
-  type: 'study' | 'workout' | 'task' | 'uni' | 'ai' | 'other'
+  type: "study" | "workout" | "task" | "uni" | "ai" | "other"
   color: string
   notes?: string
 }
@@ -77,13 +77,15 @@ export interface UserProfile {
   name: string
   email: string
   avatar: string
-  tier: 'Free' | 'Premium'
+  tier: "Free" | "Premium"
   dailyStudyGoalHours: number
   pomodoroMinutes: number
   workoutGoalPerWeek: number
 }
 
-export type ThemeMode = 'light' | 'dark' | 'system'
+export type ThemeMode = "light" | "dark" | "system"
+
+export type ThemeName = "default" | "hellokitty" | "spiderman" | "ancient" | "school" | "library"
 
 export interface NotificationSettings {
   studyReminders: boolean
@@ -101,13 +103,14 @@ export interface AIPreferences {
 
 export interface AppSettings {
   theme: ThemeMode
+  colorTheme?: ThemeName
   notifications: NotificationSettings
   aiPreferences: AIPreferences
 }
 
 export interface ChatMessage {
   id: string
-  role: 'user' | 'ai'
+  role: "user" | "ai"
   text: string
   timestamp: string
 }

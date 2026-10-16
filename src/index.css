@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
 @theme inline {
@@ -40,6 +38,11 @@
   --sidebar-bg: #0e1520;
   --sidebar-text: #8b99aa;
   --sidebar-active: #19b88f;
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --chart-study: #19b88f;
+  --chart-tasks: #5b8def;
+  --chart-workout: #e45b5b;
+  --chart-productivity: #f59e0b;
 }
 
 .dark {
@@ -61,6 +64,241 @@
   --sidebar-bg: #0a0e14;
   --sidebar-text: #8b99aa;
   --sidebar-active: #19b88f;
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --chart-study: #19b88f;
+  --chart-tasks: #5b8def;
+  --chart-workout: #e45b5b;
+  --chart-productivity: #f59e0b;
+}
+
+/* 1. Hello Kitty Theme (pink/white/red, soft rounded shapes) */
+.theme-hellokitty {
+  --primary: #ff4d88;
+  --primary-foreground: #ffffff;
+  --secondary: #ff75a0;
+  --secondary-foreground: #ffffff;
+  --accent: #ff2d55;
+  --accent-foreground: #ffffff;
+  --ring: #ff4d88;
+  --radius: 22px;
+  --sidebar-active: #ff4d88;
+  --chart-study: #ff4d88;
+  --chart-tasks: #ff75a0;
+  --chart-workout: #ff2d55;
+  --chart-productivity: #ffa6c1;
+}
+.theme-hellokitty:not(.dark) {
+  --background: #fff5f8;
+  --card: #ffffff;
+  --card-foreground: #381220;
+  --foreground: #381220;
+  --muted: #ffe6ef;
+  --muted-foreground: #8a576a;
+  --border: rgba(255, 77, 136, 0.15);
+  --sidebar-bg: #29121a;
+  --sidebar-text: #d39eb2;
+}
+.theme-hellokitty.dark {
+  --background: #1b0e14;
+  --card: #28141e;
+  --card-foreground: #fff0f5;
+  --foreground: #fff0f5;
+  --muted: #381928;
+  --muted-foreground: #d39eb2;
+  --border: rgba(255, 77, 136, 0.2);
+  --sidebar-bg: #14090e;
+  --sidebar-text: #c0879c;
+}
+
+/* 2. Spider-Man Theme (red/navy/black) */
+.theme-spiderman {
+  --primary: #e62429;
+  --primary-foreground: #ffffff;
+  --secondary: #1d4ed8;
+  --secondary-foreground: #ffffff;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --ring: #e62429;
+  --radius: 14px;
+  --sidebar-active: #e62429;
+  --chart-study: #e62429;
+  --chart-tasks: #2563eb;
+  --chart-workout: #ef4444;
+  --chart-productivity: #3b82f6;
+}
+.theme-spiderman:not(.dark) {
+  --background: #f1f4f9;
+  --card: #ffffff;
+  --card-foreground: #091322;
+  --foreground: #091322;
+  --muted: #e2e8f0;
+  --muted-foreground: #475569;
+  --border: rgba(230, 36, 41, 0.15);
+  --sidebar-bg: #091424;
+  --sidebar-text: #94a3b8;
+}
+.theme-spiderman.dark {
+  --background: #080c14;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: rgba(230, 36, 41, 0.25);
+  --sidebar-bg: #05080e;
+  --sidebar-text: #818cf8;
+}
+
+/* 3. Black Ancient Theme (black with gold/bronze, serif heading font) */
+.theme-ancient {
+  --font-heading: 'Cinzel', serif, system-ui;
+  --primary: #d4af37;
+  --primary-foreground: #111111;
+  --secondary: #c59b27;
+  --secondary-foreground: #111111;
+  --accent: #e5c158;
+  --accent-foreground: #111111;
+  --ring: #d4af37;
+  --radius: 8px;
+  --sidebar-active: #d4af37;
+  --chart-study: #d4af37;
+  --chart-tasks: #b38b1e;
+  --chart-workout: #e5c158;
+  --chart-productivity: #8a6c17;
+}
+.theme-ancient:not(.dark) {
+  --background: #f6f3eb;
+  --card: #fefdf9;
+  --card-foreground: #1a1712;
+  --foreground: #1a1712;
+  --muted: #ebe5d5;
+  --muted-foreground: #6e6552;
+  --border: rgba(212, 175, 55, 0.25);
+  --sidebar-bg: #141310;
+  --sidebar-text: #b8b09f;
+}
+.theme-ancient.dark {
+  --background: #0a0a09;
+  --card: #141412;
+  --card-foreground: #ede8dc;
+  --foreground: #ede8dc;
+  --muted: #1e1e1a;
+  --muted-foreground: #a69f8c;
+  --border: rgba(212, 175, 55, 0.22);
+  --sidebar-bg: #070706;
+  --sidebar-text: #968e7b;
+}
+
+/* 4. School Theme (notebook-paper background, handwritten accents) */
+.theme-school {
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f59e0b;
+  --secondary-foreground: #1e293b;
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+  --ring: #2563eb;
+  --radius: 12px;
+  --sidebar-active: #2563eb;
+  --chart-study: #2563eb;
+  --chart-tasks: #f59e0b;
+  --chart-workout: #10b981;
+  --chart-productivity: #6366f1;
+}
+.theme-school:not(.dark) {
+  --background: #fbfbf7;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: rgba(37, 99, 235, 0.15);
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+}
+.theme-school.dark {
+  --background: #0f141c;
+  --card: #17202e;
+  --card-foreground: #f1f5f9;
+  --foreground: #f1f5f9;
+  --muted: #1f2c3f;
+  --muted-foreground: #94a3b8;
+  --border: rgba(37, 99, 235, 0.22);
+  --sidebar-bg: #090d14;
+  --sidebar-text: #818cf8;
+}
+
+/* 5. Library Theme (warm wood and paper tones, serif type, muted green/burgundy) */
+.theme-library {
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --primary: #2e604a;
+  --primary-foreground: #ffffff;
+  --secondary: #8c2d38;
+  --secondary-foreground: #ffffff;
+  --accent: #b45309;
+  --accent-foreground: #ffffff;
+  --ring: #2e604a;
+  --radius: 10px;
+  --sidebar-active: #5fa887;
+  --chart-study: #2e604a;
+  --chart-tasks: #8c2d38;
+  --chart-workout: #b45309;
+  --chart-productivity: #5a7350;
+}
+.theme-library:not(.dark) {
+  --background: #f7f4ed;
+  --card: #fffdf9;
+  --card-foreground: #231d17;
+  --foreground: #231d17;
+  --muted: #ebe5d7;
+  --muted-foreground: #695e50;
+  --border: rgba(46, 96, 74, 0.18);
+  --sidebar-bg: #211914;
+  --sidebar-text: #c2b5a5;
+}
+.theme-library.dark {
+  --background: #14100d;
+  --card: #1d1813;
+  --card-foreground: #f4eee2;
+  --foreground: #f4eee2;
+  --muted: #29221b;
+  --muted-foreground: #a89d8e;
+  --border: rgba(95, 168, 135, 0.22);
+  --sidebar-bg: #0c0907;
+  --sidebar-text: #9f9180;
+}
+
+/* Spider-Man Hanging Spider Sway Animation */
+@keyframes spiderSway {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.spider-sway {
+  transform-origin: top center;
+  animation: spiderSway 4.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spider-sway,
+  .animate-slide-in,
+  .animate-pulse {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 * {
@@ -88,7 +326,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font-heading, 'Plus Jakarta Sans', system-ui, sans-serif);
 }
 
 /* Thin scrollbar */
