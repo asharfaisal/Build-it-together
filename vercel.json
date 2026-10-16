@@ -8,11 +8,6 @@
       "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/assets/(.*)",
