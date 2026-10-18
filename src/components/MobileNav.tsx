@@ -10,8 +10,10 @@ import {
   Settings as SettingsIcon,
   Menu,
   X,
+  LogOut,
 } from "lucide-react"
 import { Page, useApp } from "../context/AppContext"
+import { useAuth } from "../contexts/AuthContext"
 
 const primaryNav: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Home", icon: <LayoutDashboard size={20} /> },
@@ -46,6 +48,7 @@ const allNavItems: { id: Page; label: string; icon: React.ReactNode }[] = [
 
 export default function MobileNav() {
   const { page, setPage, focusTimer } = useApp()
+  const { signOut } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -123,6 +126,22 @@ export default function MobileNav() {
                   </button>
                 )
               })}
+              <button
+                onClick={() => {
+                  signOut()
+                  setDrawerOpen(false)
+                }}
+                className="flex items-center gap-2.5 p-3 rounded-2xl text-left transition-all cursor-pointer min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-400"
+                style={{
+                  background: "rgba(228,91,91,0.1)",
+                  border: "1px solid rgba(228,91,91,0.2)",
+                  color: "#e45b5b",
+                }}
+                aria-label="Sign Out"
+              >
+                <span className="shrink-0"><LogOut size={20} /></span>
+                <span className="text-xs font-semibold truncate flex-1">Sign Out</span>
+              </button>
             </div>
           </div>
         </div>

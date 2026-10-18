@@ -11,8 +11,10 @@ import {
   Sun,
   Moon,
   Palette,
+  LogOut,
 } from "lucide-react"
 import { Page, useApp } from "../context/AppContext"
+import { useAuth } from "../contexts/AuthContext"
 import { ThemeName } from "../types"
 
 const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
@@ -45,6 +47,7 @@ export default function Sidebar() {
     colorTheme,
     setColorTheme,
   } = useApp()
+  const { signOut } = useAuth()
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
 
   const fmtMinSec = (s: number) => {
@@ -326,6 +329,26 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
+
+        {/* Logout */}
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          style={{
+            background: "transparent",
+            color: "var(--sidebar-text)",
+            fontSize: "13.5px",
+            cursor: "pointer",
+            border: "none",
+          }}
+          title="Sign out"
+          aria-label="Sign out"
+        >
+          <span style={{ color: "#6b7a8d" }} className="shrink-0 flex items-center justify-center">
+            <LogOut size={18} />
+          </span>
+          <span>Sign Out</span>
+        </button>
       </div>
     </aside>
   )
