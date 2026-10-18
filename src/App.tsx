@@ -274,6 +274,7 @@ function AppContent() {
 
 function ProtectedApp() {
   const { user, loading } = useAuth()
+  const { setPage } = useApp()
 
   if (loading) {
     return (
@@ -292,8 +293,8 @@ function ProtectedApp() {
   }
 
   if (!user) {
-    // Redirect to login - but we handle this via page state in AppContext
-    // For now, render the auth page
+    // Redirect to login page when not authenticated
+    setPage("login")
     return <AppContent />
   }
 
