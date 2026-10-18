@@ -32,13 +32,11 @@ describe("storageService", () => {
   })
 
   describe("loadTasks", () => {
-    it("returns initial tasks when localStorage is empty", () => {
+    it("returns empty array when localStorage is empty (new users start fresh)", () => {
       // Ensure clean state
       localStorage.removeItem("lifetrack_tasks_v1")
       const tasks = storageService.loadTasks()
-      expect(tasks).toHaveLength(8) // initialTasks length
-      expect(tasks[0]).toHaveProperty("id")
-      expect(tasks[0]).toHaveProperty("title")
+      expect(tasks).toHaveLength(0) // initialTasks is now empty for fresh start
     })
 
     it("returns parsed tasks from localStorage", () => {

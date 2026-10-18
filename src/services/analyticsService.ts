@@ -196,15 +196,16 @@ export function computeTodayStats(
   const tasksProgressPct =
     tasksTotalToday > 0
       ? Math.round((tasksDoneToday / tasksTotalToday) * 100)
-      : 100
+      : 0
 
   // 4. Productivity score calculation
   // Formula: 40% task completion + 40% study progress + 20% workout
+  // Only count task weight if there are tasks due today
   const taskWeight =
-    tasksTotalToday > 0 ? (tasksDoneToday / tasksTotalToday) * 40 : 40
+    tasksTotalToday > 0 ? (tasksDoneToday / tasksTotalToday) * 40 : 0
   const studyWeight = Math.min(1, studyMinutes / targetMinutes) * 40
   const workoutWeight =
-    workoutStatus === "Completed" ? 20 : workoutStatus === "Planned" ? 10 : 15
+    workoutStatus === "Completed" ? 20 : workoutStatus === "Planned" ? 10 : 0
   const productivityScore = Math.min(
     100,
     Math.max(0, Math.round(taskWeight + studyWeight + workoutWeight)),
@@ -495,7 +496,7 @@ export function computeSubjectDistribution(
 // Compute Workout Volume Chart Data
 export function computeWorkoutVolumeData(
   workouts: Workout[],
-): { day: string volume: number }[] {
+): { day: string; volume: number }[] {
   const chartData = computeRangeChartData([], [], workouts, "7D")
   return chartData.map((d) => ({
     day: d.day,

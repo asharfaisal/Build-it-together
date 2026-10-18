@@ -15,7 +15,7 @@ import {
 import { Page, useApp } from "../context/AppContext"
 import { ThemeName } from "../types"
 
-const navItems: { id: Page label: string icon: React.ReactNode }[] = [
+const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
   { id: "study", label: "Study", icon: <BookOpen size={18} /> },
   { id: "workout", label: "Workout", icon: <Dumbbell size={18} /> },
@@ -25,7 +25,7 @@ const navItems: { id: Page label: string icon: React.ReactNode }[] = [
   { id: "coach", label: "AI Coach", icon: <Sparkles size={18} /> },
 ]
 
-const themeList: { id: ThemeName label: string dotColor: string }[] = [
+const themeList: { id: ThemeName; label: string; dotColor: string }[] = [
   { id: "default", label: "Emerald Default", dotColor: "#19b88f" },
   { id: "hellokitty", label: "Hello Kitty", dotColor: "#ff4d88" },
   { id: "spiderman", label: "Spider-Man", dotColor: "#e62429" },

@@ -206,7 +206,7 @@ export default function Calendar() {
   // Calendar cells grid
 
   const cells = useMemo(() => {
-    const list: { dayNum: number | null dateStr: string | null }[] = []
+    const list: { dayNum: number | null; dateStr: string | null }[] = []
 
     for (let i = 0; i < firstDayIndex; i++) {
       list.push({ dayNum: null, dateStr: null })

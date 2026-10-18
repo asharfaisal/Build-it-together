@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 import { Page, useApp } from "../context/AppContext"
 
-const primaryNav: { id: Page label: string icon: React.ReactNode }[] = [
+const primaryNav: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Home", icon: <LayoutDashboard size={20} /> },
   { id: "study", label: "Study", icon: <BookOpen size={20} /> },
   { id: "workout", label: "Workout", icon: <Dumbbell size={20} /> },
@@ -21,7 +21,7 @@ const primaryNav: { id: Page label: string icon: React.ReactNode }[] = [
   { id: "coach", label: "AI Coach", icon: <Sparkles size={20} /> },
 ]
 
-const allNavItems: { id: Page label: string icon: React.ReactNode }[] = [
+const allNavItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
   { id: "study", label: "Study & Timers", icon: <BookOpen size={20} /> },
   { id: "workout", label: "Workout Tracker", icon: <Dumbbell size={20} /> },
